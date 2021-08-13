@@ -4,7 +4,7 @@
 //  ***************************************************************************
 #include "project_base.h"
 #include "systimer.h"
-#include "terminal.h"
+#include "term-srv.h"
 
 static void system_init(void);
 

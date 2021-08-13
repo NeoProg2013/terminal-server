@@ -1,8 +1,8 @@
 //  ***************************************************************************
-/// @file    terminal.c
+/// @file    term-srv.c
 /// @author  NeoProg
 //  ***************************************************************************
-#include "terminal.h"
+#include "term-srv.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>

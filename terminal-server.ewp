@@ -2127,10 +2127,10 @@
             <name>$PROJ_DIR$\src\project_base.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\src\terminal.c</name>
+            <name>$PROJ_DIR$\src\term-srv.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\src\terminal.h</name>
+            <name>$PROJ_DIR$\src\term-srv.h</name>
         </file>
     </group>
     <file>
