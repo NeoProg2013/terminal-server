@@ -7,12 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
-#define MAX_COMMAND_HISTORY_LENGTH          (3)
-#define MAX_COMMAND_LENGTH                  (64)
-#define GREETING_STRING                     ("\x1B[36mroot@hexapod-AIWM: \x1B[0m")
-#define UNKNOWN_COMMAND_STRING              ("\x1B[31m - command not found\x1B[0m")
 #define ESCAPE_SEQUENCES_COUNT              (11)
+#define ESCAPE_SEQUENCES_MAX_LENGTH         (10)
 
 
 typedef struct {
@@ -53,7 +49,7 @@ static uint8_t ext_cmd_count = 0;
 
 static int16_t cursor_pos = 0;
 static cmd_info_t current_cmd = {0};
-static char esc_seq_buffer[10] = {0};
+static char esc_seq_buffer[ESCAPE_SEQUENCES_MAX_LENGTH] = {0};
 static int16_t esc_seq_length = 0;
 
 static cmd_info_t history_elements[MAX_COMMAND_HISTORY_LENGTH] = {0};
@@ -260,10 +256,11 @@ static void esc_del_handler(const char* cmd) {
 /// @brief  Process ARROW_UP escape
 //  ***************************************************************************
 static void esc_up_handler(const char* cmd) {
-    --history_pos;
-    if (history_pos < 0) {
-        history_pos = 0;
+    if (history_pos - 1 < 0) {
+        //history_pos = 0;
+        return;
     }
+    --history_pos;
 
     // Calculate diff between current command and command from history
     int16_t remainder = current_cmd.len - history[history_pos]->len;
@@ -291,10 +288,11 @@ static void esc_up_handler(const char* cmd) {
 /// @brief  Process ARROW_DOWN escape
 //  ***************************************************************************
 static void esc_down_handler(const char* cmd) {
-    ++history_pos;
-    if (history_pos > history_len) {
-       history_pos = history_len;
+    if (history_pos + 1 > history_len) {
+       //history_pos = history_len;
+        return;
     }
+    ++history_pos;
 
     int16_t remainder = 0;
     if (history_pos < history_len) {
@@ -317,9 +315,8 @@ static void esc_down_handler(const char* cmd) {
        remainder = current_cmd.len;
 
        // Move cursor to begin of command
-       while (current_cmd.len > 0) {
+       while (cursor_pos) {
            send_data("\x1B[D", 3);
-           --current_cmd.len;
            --cursor_pos;
        }
 

@@ -7,6 +7,13 @@
 #define _TERM_SRV_H_
 #include <stdint.h>
 
+// Settings
+#define MAX_COMMAND_HISTORY_LENGTH          (3)     // Command count in history
+#define MAX_COMMAND_LENGTH                  (64)    // Command length in bytes
+#define GREETING_STRING                     ("\x1B[36mroot@hexapod-AIWM: \x1B[0m")
+#define UNKNOWN_COMMAND_STRING              ("\x1B[31m - command not found\x1B[0m")
+
+
 typedef struct {
     char* cmd;
     uint16_t len;
