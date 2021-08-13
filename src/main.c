@@ -31,7 +31,7 @@ void test_cmd2(const char* data) {
 
 term_srv_cmd_t cmd_list[] = {
     { .cmd = "command1", .len = 8, .handler = test_cmd1 },
-    { .cmd = "command2", .len = 8, .handler = test_cmd2 },
+    { .cmd = "test-cmd", .len = 8, .handler = test_cmd2 },
 };
 
 //  ***************************************************************************

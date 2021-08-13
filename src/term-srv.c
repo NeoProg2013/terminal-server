@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#define ESCAPE_SEQUENCES_COUNT              (11)
+#define ESCAPE_SEQUENCES_COUNT              (12)
 #define ESCAPE_SEQUENCES_MAX_LENGTH         (10)
 
 
@@ -26,14 +26,16 @@ static void esc_left_handler(const char*);
 static void esc_right_handler(const char*);
 static void esc_home_handler(const char*);
 static void esc_end_handler(const char*);
+static void esc_tab_handler(const char*);
 
 
-static const char esc_seq_signature[] = {'\x1B', '\x7F', '\x08', '\x0D', '\x0A' };
+static const char esc_seq_signature[] = {'\x1B', '\x7F', '\x08', '\x0D', '\x0A', '\x09' };
 static term_srv_cmd_t esc_seq_list[ESCAPE_SEQUENCES_COUNT] = {
     { .cmd = "\x0D",    .len = 1, .handler = esc_return_handler,    },
     { .cmd = "\x0A",    .len = 1, .handler = esc_return_handler,    },
     { .cmd = "\x7F",    .len = 1, .handler = esc_backspace_handler, },
     { .cmd = "\x08",    .len = 1, .handler = esc_backspace_handler, },
+    { .cmd = "\x09",    .len = 1, .handler = esc_tab_handler,       },
     { .cmd = "\x1B[3~", .len = 4, .handler = esc_del_handler,       },
     { .cmd = "\x1B[A",  .len = 3, .handler = esc_up_handler,        },
     { .cmd = "\x1B[B",  .len = 3, .handler = esc_down_handler,      },
@@ -368,5 +370,28 @@ static void esc_end_handler(const char* cmd) {
     while (cursor_pos < current_cmd.len) {
         send_data("\x1B[C", 3);
         ++cursor_pos;
+    }
+}
+
+//  ***************************************************************************
+/// @brief  Process DELETE escapes
+//  ***************************************************************************
+static void esc_tab_handler(const char* cmd) {
+    int8_t possible_cmd_count = 0;
+    int8_t possible_cmd_idx = 0;
+    for (int16_t i = 0; i < ext_cmd_count; ++i) {
+        if (current_cmd.len <= ext_cmd_list[i].len && memcmp(ext_cmd_list[i].cmd, current_cmd.cmd, current_cmd.len) == 0) {
+            ++possible_cmd_count;
+            possible_cmd_idx = i;
+        }
+    }
+    if (possible_cmd_count == 1) {
+        int16_t remainder = ext_cmd_list[possible_cmd_idx].len - current_cmd.len;
+        if (remainder != 0) {
+            memcpy(&current_cmd.cmd[cursor_pos], &ext_cmd_list[possible_cmd_idx].cmd[cursor_pos], remainder);
+            current_cmd.len += remainder;
+            send_data(&current_cmd.cmd[cursor_pos], remainder);
+            cursor_pos += remainder;
+        }
     }
 }
