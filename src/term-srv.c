@@ -29,7 +29,6 @@ static void esc_end_handler(const char*);
 static void esc_tab_handler(const char*);
 
 
-static const char esc_seq_signature[] = {'\x1B', '\x7F', '\x08', '\x0D', '\x0A', '\x09' };
 static term_srv_cmd_t esc_seq_list[ESCAPE_SEQUENCES_COUNT] = {
     { .cmd = "\x0D",    .len = 1, .handler = esc_return_handler,    },
     { .cmd = "\x0A",    .len = 1, .handler = esc_return_handler,    },
@@ -114,11 +113,8 @@ void term_srv_process(char symbol) {
     
     if (esc_seq_length == 0) {
         // Check escape signature
-        for (int16_t i = 0; i < sizeof(esc_seq_signature); ++i) {
-            if (symbol == esc_seq_signature[i]) {
-                esc_seq_buffer[esc_seq_length++] = symbol;
-                break;
-            }
+        if (symbol <= 0x1F || symbol == 0x7F) {
+            esc_seq_buffer[esc_seq_length++] = symbol;
         }
         // Print symbol if escape sequence signature is not found
         if (esc_seq_length == 0) {
@@ -149,7 +145,15 @@ void term_srv_process(char symbol) {
         
         switch (possible_esc_seq_count) {
         case 0: // No sequence - display all symbols
-            send_data(esc_seq_buffer, esc_seq_length);
+            for (int16_t i = 0; i < esc_seq_length && current_cmd.len + 1 < MAX_COMMAND_LENGTH; ++i) {
+                if (esc_seq_buffer[i] <= 0x1F || esc_seq_buffer[i] == 0x7F) {
+                    esc_seq_buffer[i] = '?';
+                }
+                current_cmd.cmd[cursor_pos + i] = esc_seq_buffer[i];
+                ++current_cmd.len;
+            }
+            send_data(&current_cmd.cmd[cursor_pos], esc_seq_length);
+            cursor_pos += esc_seq_length;
             esc_seq_length = 0;
             break;
         
@@ -291,7 +295,6 @@ static void esc_up_handler(const char* cmd) {
 //  ***************************************************************************
 static void esc_down_handler(const char* cmd) {
     if (history_pos + 1 > history_len) {
-       //history_pos = history_len;
         return;
     }
     ++history_pos;
