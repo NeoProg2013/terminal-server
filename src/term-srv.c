@@ -44,7 +44,7 @@ static term_srv_cmd_t esc_seq_list[ESCAPE_SEQUENCES_COUNT] = {
     { .cmd = "\x1B[1~", .len = 4, .handler = esc_home_handler,      }
 };
 
-static void(*send_data)(const char* data, uint16_t) = NULL;
+static void(*send_data)(const char* data, int16_t) = NULL;
 static term_srv_cmd_t* ext_cmd_list = NULL;
 static uint8_t ext_cmd_count = 0;
 
@@ -55,8 +55,8 @@ static int16_t esc_seq_length = 0;
 
 static cmd_info_t history_elements[MAX_COMMAND_HISTORY_LENGTH] = {0};
 static cmd_info_t* history[MAX_COMMAND_HISTORY_LENGTH] = {0};
-static int16_t history_len = 0;
-static int16_t history_pos = -1;
+static int8_t history_len = 0;
+static int8_t history_pos = -1;
 
 
 static inline void save_cursor_pos() { send_data("\x1B[s", 3); }
@@ -68,7 +68,7 @@ static inline void load_cursor_pos() { send_data("\x1B[u", 3); }
 /// @param  none
 /// @return none
 //  ***************************************************************************
-void term_srv_init(void(*_send_data)(const char*, uint16_t), term_srv_cmd_t* _ext_cmd_list, uint8_t _ext_cmd_count) {
+void term_srv_init(void(*_send_data)(const char*, int16_t), term_srv_cmd_t* _ext_cmd_list, uint8_t _ext_cmd_count) {
     send_data = _send_data;
     ext_cmd_list = _ext_cmd_list;
     ext_cmd_count = _ext_cmd_count;
@@ -145,7 +145,7 @@ void term_srv_process(char symbol) {
         
         switch (possible_esc_seq_count) {
         case 0: // No sequence - display all symbols
-            for (int16_t i = 0; i < esc_seq_length && current_cmd.len + 1 < MAX_COMMAND_LENGTH; ++i) {
+            for (int8_t i = 0; i < esc_seq_length && current_cmd.len + 1 < MAX_COMMAND_LENGTH; ++i) {
                 if (esc_seq_buffer[i] <= 0x1F || esc_seq_buffer[i] == 0x7F) {
                     esc_seq_buffer[i] = '?';
                 }
@@ -263,7 +263,6 @@ static void esc_del_handler(const char* cmd) {
 //  ***************************************************************************
 static void esc_up_handler(const char* cmd) {
     if (history_pos - 1 < 0) {
-        //history_pos = 0;
         return;
     }
     --history_pos;

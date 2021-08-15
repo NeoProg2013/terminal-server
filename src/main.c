@@ -13,7 +13,7 @@ static void system_init(void);
 #define USART_RX_PIN                    (3)  // PA3
 
 
-void send_data(const char* data, uint16_t size) {
+void send_data(const char* data, int16_t size) {
     while (size) {
         while ((USART1->ISR & USART_ISR_TXE) != USART_ISR_TXE);
         USART1->TDR = *data;
